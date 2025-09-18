@@ -179,6 +179,16 @@ async function getCssFileContent(filePath: string, sidebarProvider: ChatSidebarP
 
 // Function to submit email to Supabase API
 async function submitEmailToSupabase(email: string, sidebarProvider: ChatSidebarProvider) {
+	// If no email provided, skip submission and proceed
+	if (!email || !email.trim()) {
+		Logger.info('Email submission skipped - no email provided');
+		sidebarProvider.sendMessage({
+			command: 'emailSubmitSuccess',
+			email: ''
+		});
+		return;
+	}
+
 	try {
 		const https = require('https');
 		const postData = JSON.stringify({ email });

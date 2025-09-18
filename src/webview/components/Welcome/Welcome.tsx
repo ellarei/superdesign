@@ -46,21 +46,29 @@ const Welcome: React.FC<WelcomeProps> = ({ onGetStarted, vscode }) => {
         e.preventDefault();
         setError('');
 
-        // Validate email
-        if (!email.trim()) {
-            setError('Email is required');
-            return;
-        }
-
-        if (!validateEmail(email.trim())) {
-            setError('Invalid email');
+        // Email is now optional - if provided, validate it
+        if (email.trim() && !validateEmail(email.trim())) {
+            setError('Invalid email format');
             return;
         }
 
         setIsLoading(true);
 
-        // Submit email via extension (response will be handled by useEffect)
-        await submitEmail(email.trim());
+        // If email is provided, submit it; otherwise just proceed
+        if (email.trim()) {
+            await submitEmail(email.trim());
+        } else {
+            // Skip email submission and proceed directly
+            setTimeout(() => {
+                setIsLoading(false);
+                onGetStarted();
+            }, 100);
+        }
+    };
+
+    const handleSkip = () => {
+        // Skip email collection and proceed directly
+        onGetStarted();
     };
 
     const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,7 +94,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onGetStarted, vscode }) => {
                         type="email"
                         value={email}
                         onChange={handleEmailChange}
-                        placeholder="Enter your email address"
+                        placeholder="Enter your email address (optional)"
                         className={`email-input ${error ? 'error' : ''}`}
                         disabled={isLoading}
                         autoComplete="email"
@@ -95,13 +103,33 @@ const Welcome: React.FC<WelcomeProps> = ({ onGetStarted, vscode }) => {
                 </div>
 
                 <div className="welcome-actions">
-                    <button 
-                        type="submit" 
-                        className="btn-primary" 
-                        disabled={isLoading || !email.trim()}
+                    <button
+                        type="submit"
+                        className="btn-primary"
+                        disabled={isLoading}
                     >
-                        {isLoading ? 'Getting Started...' : 'Get Started'}
+                        {isLoading ? 'Getting Started...' : email.trim() ? 'Get Started' : 'Continue'}
                     </button>
+                    {!email.trim() && !isLoading && (
+                        <button
+                            type="button"
+                            onClick={handleSkip}
+                            className="btn-secondary"
+                            style={{
+                                marginLeft: '10px',
+                                background: 'transparent',
+                                color: 'var(--vscode-button-foreground)',
+                                border: '1px solid var(--vscode-button-border, var(--vscode-button-background))',
+                                padding: '8px 16px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '500'
+                            }}
+                        >
+                            Skip for now
+                        </button>
+                    )}
                 </div>
             </form>
         </div>
